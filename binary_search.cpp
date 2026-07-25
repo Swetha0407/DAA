@@ -22,4 +22,6 @@ int main() {
             high=mid-1;
         }
     }
+    cout << "Element not found";
+    return 0;
 }
