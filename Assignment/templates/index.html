@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>BinPack Studio</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                BP
+            </div>
+
+            <div>
+                <h1>BinPack Studio</h1>
+
+                <p>
+                    Approximation & packing analysis
+                </p>
+            </div>
+
+        </div>
+
+        <div class="course-tag">
+            DAA PROJECT
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main>
+
+        <!-- =================================================
+             HERO
+        ================================================== -->
+
+        <section class="hero">
+
+            <div>
+
+                <span class="eyebrow">
+                    ALGORITHMIC EXPERIMENT
+                </span>
+
+                <h2>
+                    How efficiently can we<br>
+                    pack the same set of items?
+                </h2>
+
+                <p>
+                    Compare four greedy approximation strategies,
+                    inspect their packing decisions and measure
+                    how input distributions affect their performance.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             01 — EXPERIMENT SETUP
+        ================================================== -->
+
+        <section class="panel">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="section-number">
+                        01
+                    </span>
+
+                    <h3>
+                        Experiment setup
+                    </h3>
+
+                </div>
+
+                <p>
+                    Define the problem before running the algorithms.
+                </p>
+
+            </div>
+
+
+            <div class="form-grid">
+
+                <!-- BIN CAPACITY -->
+
+                <div class="field">
+
+                    <label for="capacity">
+                        Bin capacity
+                    </label>
+
+                    <input
+                        id="capacity"
+                        type="number"
+                        value="100"
+                        min="1"
+                    >
+
+                    <small>
+                        Maximum load allowed in one bin
+                    </small>
+
+                </div>
+
+
+                <!-- ITEM COUNT -->
+
+                <div class="field">
+
+                    <label for="itemCount">
+                        Number of items
+                    </label>
+
+                    <input
+                        id="itemCount"
+                        type="number"
+                        value="20"
+                        min="1"
+                        max="100000"
+                    >
+
+                    <small>
+                        Used when generating a dataset
+                    </small>
+
+                </div>
+
+
+                <!-- DATASET TYPE -->
+
+                <div class="field">
+
+                    <label for="datasetType">
+                        Dataset type
+                    </label>
+
+                    <select id="datasetType">
+
+                        <option value="random">
+                            Random distribution
+                        </option>
+
+                        <option value="small">
+                            Mostly small items
+                        </option>
+
+                        <option value="large">
+                            Mostly large items
+                        </option>
+
+                        <option value="mixed">
+                            Mixed distribution
+                        </option>
+
+                    </select>
+
+                    <small>
+                        Changes the characteristics of the input
+                    </small>
+
+                </div>
+
+
+                <!-- RANDOM SEED -->
+
+                <div class="field">
+
+                    <label for="seed">
+                        Random seed
+                    </label>
+
+                    <input
+                        id="seed"
+                        type="number"
+                        value="42"
+                    >
+
+                    <small>
+                        Same seed → reproducible dataset
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTION BUTTONS -->
+
+            <div class="actions">
+
+                <button
+                    class="button secondary"
+                    type="button"
+                    onclick="generateDataset()"
+                >
+                    Generate dataset
+                </button>
+
+                <button
+                    class="button primary"
+                    type="button"
+                    onclick="runAnalysis()"
+                >
+                    Run comparison
+                    <span>→</span>
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             02 — INPUT ITEMS
+        ================================================== -->
+
+        <section class="panel">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="section-number">
+                        02
+                    </span>
+
+                    <h3>
+                        Input items
+                    </h3>
+
+                </div>
+
+                <p>
+                    Edit the generated values or enter your own dataset.
+                </p>
+
+            </div>
+
+
+            <textarea
+                id="items"
+                placeholder="Example: 42, 17, 89, 34, 56, 12"
+                spellcheck="false"
+            ></textarea>
+
+
+            <div class="input-meta">
+
+                <span id="itemSummary">
+                    No dataset loaded
+                </span>
+
+                <button
+                    class="text-button"
+                    type="button"
+                    onclick="clearItems()"
+                >
+                    Clear
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ERROR MESSAGE
+        ================================================== -->
+
+        <div
+            id="errorBox"
+            class="error-box hidden"
+            role="alert"
+        ></div>
+
+
+        <!-- =================================================
+             03 — ALGORITHM COMPARISON
+        ================================================== -->
+
+        <section
+            class="results-section hidden"
+            id="resultsSection"
+        >
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="section-number">
+                        03
+                    </span>
+
+                    <h3>
+                        Algorithm comparison
+                    </h3>
+
+                </div>
+
+                <p>
+                    Same input. Four different packing strategies.
+                </p>
+
+            </div>
+
+
+            <!-- ALGORITHM CARDS -->
+
+            <div
+                class="algorithm-grid"
+                id="algorithmCards"
+            ></div>
+
+
+            <!-- CURRENT OBSERVATION -->
+
+            <div
+                class="recommendation"
+                id="recommendation"
+            ></div>
+
+
+            <!-- =================================================
+                 VISUAL PACKING
+            ================================================== -->
+
+            <div class="packing-panel">
+
+                <div class="packing-header">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            VISUAL PACKING
+                        </span>
+
+                        <h3>
+                            Bin utilisation
+                        </h3>
+
+                    </div>
+
+
+                    <select
+                        id="algorithmSelect"
+                        onchange="displayPacking()"
+                        aria-label="Select algorithm"
+                    ></select>
+
+                </div>
+
+
+                <div
+                    class="bins-container"
+                    id="binsContainer"
+                ></div>
+
+            </div>
+
+
+            <!-- =================================================
+                 PERFORMANCE SUMMARY
+            ================================================== -->
+
+            <div class="comparison-table">
+
+                <div class="packing-header">
+
+                    <div>
+
+                        <span class="eyebrow">
+                            MEASUREMENTS
+                        </span>
+
+                        <h3>
+                            Performance summary
+                        </h3>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Algorithm
+                                </th>
+
+                                <th>
+                                    Bins
+                                </th>
+
+                                <th>
+                                    Used Space
+                                </th>
+
+                                <th>
+                                    Unused Space
+                                </th>
+
+                                <th>
+                                    Utilization
+                                </th>
+
+                                <th>
+                                    Time
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody
+                            id="comparisonBody"
+                        ></tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             04 — BENCHMARK LAB
+        ================================================== -->
+
+        <section class="benchmark-section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="section-number">
+                        04
+                    </span>
+
+                    <h3>
+                        Benchmark lab
+                    </h3>
+
+                </div>
+
+                <p>
+                    Observe how performance changes as the input grows.
+                </p>
+
+            </div>
+
+
+            <!-- BENCHMARK INTRO -->
+
+            <div class="benchmark-intro">
+
+                <div>
+
+                    <span class="eyebrow">
+                        EXPERIMENTAL ANALYSIS
+                    </span>
+
+                    <h3>
+                        Scaling behaviour
+                    </h3>
+
+                    <p>
+                        The same packing strategies are tested on
+                        progressively larger datasets. Median execution
+                        time is recorded across repeated runs.
+                    </p>
+
+                </div>
+
+
+                <div class="benchmark-actions">
+
+                    <button
+                        class="button secondary"
+                        type="button"
+                        onclick="runFullExperiment()"
+                    >
+                        Full experiment
+                    </button>
+
+
+                    <button
+                        class="button primary"
+                        type="button"
+                        onclick="runBenchmark()"
+                        id="benchmarkButton"
+                    >
+                        Run benchmark
+                        <span>→</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- BENCHMARK OPTIONS -->
+
+            <div class="benchmark-options">
+
+                <!-- DISTRIBUTION -->
+
+                <div class="benchmark-option">
+
+                    <label for="benchmarkDataset">
+                        Dataset distribution
+                    </label>
+
+                    <select
+                        id="benchmarkDataset"
+                    >
+
+                        <option value="random">
+                            Random distribution
+                        </option>
+
+                        <option value="small">
+                            Mostly small items
+                        </option>
+
+                        <option value="large">
+                            Mostly large items
+                        </option>
+
+                        <option value="mixed">
+                            Mixed distribution
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- CAPACITY -->
+
+                <div class="benchmark-option">
+
+                    <label for="benchmarkCapacity">
+                        Bin capacity
+                    </label>
+
+                    <input
+                        id="benchmarkCapacity"
+                        type="number"
+                        value="100"
+                        min="1"
+                    >
+
+                </div>
+
+
+                <!-- REPETITIONS -->
+
+                <div class="benchmark-option">
+
+                    <label for="benchmarkRepetitions">
+                        Repetitions
+                    </label>
+
+                    <select
+                        id="benchmarkRepetitions"
+                    >
+
+                        <option value="3">
+                            3 runs
+                        </option>
+
+                        <option
+                            value="5"
+                            selected
+                        >
+                            5 runs
+                        </option>
+
+                        <option value="7">
+                            7 runs
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- BENCHMARK STATUS -->
+
+            <div
+                id="benchmarkStatus"
+                class="benchmark-status hidden"
+                role="status"
+            ></div>
+
+
+            <!-- =================================================
+                 BENCHMARK RESULTS
+            ================================================== -->
+
+            <div
+                id="benchmarkResults"
+                class="hidden"
+            >
+
+
+                <!-- CHART GRID -->
+
+                <div class="chart-grid">
+
+
+                    <!-- EXECUTION TIME -->
+
+                    <div class="chart-card">
+
+                        <div class="chart-title">
+
+                            <span class="eyebrow">
+                                TIME COMPLEXITY
+                            </span>
+
+                            <h4>
+                                Execution time vs input size
+                            </h4>
+
+                        </div>
+
+
+                        <div class="chart-container">
+
+                            <canvas
+                                id="timeChart"
+                            ></canvas>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BIN COUNT -->
+
+                    <div class="chart-card">
+
+                        <div class="chart-title">
+
+                            <span class="eyebrow">
+                                PACKING QUALITY
+                            </span>
+
+                            <h4>
+                                Number of bins vs input size
+                            </h4>
+
+                        </div>
+
+
+                        <div class="chart-container">
+
+                            <canvas
+                                id="binChart"
+                            ></canvas>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- UTILIZATION -->
+
+                    <div class="chart-card wide">
+
+                        <div class="chart-title">
+
+                            <span class="eyebrow">
+                                SPACE EFFICIENCY
+                            </span>
+
+                            <h4>
+                                Utilization across dataset sizes
+                            </h4>
+
+                        </div>
+
+
+                        <div class="chart-container">
+
+                            <canvas
+                                id="utilizationChart"
+                            ></canvas>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     RAW BENCHMARK TABLE
+                ================================================== -->
+
+                <div class="benchmark-table">
+
+                    <div class="packing-header">
+
+                        <div>
+
+                            <span class="eyebrow">
+                                RAW MEASUREMENTS
+                            </span>
+
+                            <h3>
+                                Benchmark results
+                            </h3>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="table-wrapper">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Input size
+                                    </th>
+
+                                    <th>
+                                        Algorithm
+                                    </th>
+
+                                    <th>
+                                        Bins
+                                    </th>
+
+                                    <th>
+                                        Utilization
+                                    </th>
+
+                                    <th>
+                                        Median time
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody
+                                id="benchmarkTableBody"
+                            ></tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <!-- CSV EXPORT -->
+
+                    <div class="export-row">
+
+                        <button
+                            class="text-button"
+                            type="button"
+                            onclick="exportBenchmark()"
+                        >
+                            ↓ Download benchmark CSV
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     EXPERIMENTAL OBSERVATION
+                ================================================== -->
+
+                <div
+                    class="observation-box"
+                    id="benchmarkObservation"
+                ></div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer>
+
+        <span>
+            BinPack Studio
+        </span>
+
+        <span>
+            Design & Analysis of Algorithms
+        </span>
+
+    </footer>
+
+</div>
+
+
+<!-- =========================================================
+     CHART.JS
+========================================================= -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+></script>
+
+
+<!-- =========================================================
+     APPLICATION JAVASCRIPT
+========================================================= -->
+
+<script
+    src="{{ url_for('static', filename='js/app.js') }}"
+></script>
+
+
+</body>
+
+</html>
